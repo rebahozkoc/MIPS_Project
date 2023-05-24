@@ -29,34 +29,54 @@ li   $a2, 12288     # hardcoded buffer length
 syscall            # read from file
 
 move $s0, $v0	   # the number of characters read from the file
-la   $s1, buffer   # address of buffer that keeps the characters
+la   $s1, buffer   # address of buffer that keeps the characters   S1 E DOKUNMA BUFFER BURDA
 
 
 # your code goes here
 
-
-## initializations
-#la   $s1, buffer   # address of buffer that keeps the characters
-#li   $t0, 10       # counter for number of chars to print
-#
-#print_chars:
-#    lb   $a0, 0($s1)  # load a byte (character) from the buffer into $a0
-#    li   $v0, 11      # system call for print char
-#    syscall            # print character
-#
-#    addi $s1, $s1, 1  # increment buffer pointer to next char
-#    addi $t0, $t0, -1 # decrement counter
-#
-#    bgtz $t0, print_chars  # if counter > 0, go back and print next char
-
-
-
-
-
 # initializations
-la   $s1, buffer   # address of buffer that keeps the characters
-la   $s2, string   # address of the string memory block
-li   $t0, 10       # counter for number of chars to store
+
+
+li $a0, 10       # counter for number of chars to store
+jal getNCharsToString
+
+la $a0, string
+li $v0, 4
+syscall
+
+la $a0, newline
+li $v0, 4
+syscall
+
+li $a0, 2       # counter for number of chars to store
+jal getNCharsToString
+
+li $a0, 10       # counter for number of chars to store
+jal getNCharsToString
+
+la $a0, string
+li $v0, 4
+syscall
+
+la $a0, newline
+li $v0, 4
+syscall
+
+
+Exit:
+li $v0,10
+syscall             #exits the program
+
+
+# ----------- file reader function ------------
+getNCharsToString:              # string adli space'e bufferdan n char koy
+    addi $sp, $sp, -12
+    sw $ra, 0($sp)
+    sw $a0, 4($sp)              #a0 = kac karakter istiyorsun 
+    sw $s2, 8($sp)
+    la $s2, string            # address of the string memory block
+    
+    move $t0, $a0             # counter for number of chars to store
 
 store_chars:
     lb   $t1, 0($s1)    # load a byte (character) from the buffer into $t1
@@ -68,25 +88,16 @@ store_chars:
 
     bgtz $t0, store_chars  # if counter > 0, go back and store next char
 
-# store null terminator at the end of the string
-li   $t1, 0
-sb   $t1, 0($s2)
-
-
-la $a0, string
-li $v0, 4
-syscall
-
-
-Exit:
-li $v0,10
-syscall             #exits the program
-
-
-# ----------- file reader function ------------
-
-
-
+    # store null terminator at the end of the string
+    li   $t1, 0
+    sb   $t1, 0($s2)    
+    lw $ra, 0($sp)
+    lw $a0, 4($sp)
+    lw $s2, 8($sp)
+    addi $sp, $sp, 12
+    jr $ra
+    
+# ----------- file reader function ends ------------
 
 # ---------- converter function ---------------
 hexConverter:
