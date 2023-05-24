@@ -3,9 +3,13 @@ T0: .space 4                           # the pointers to your lookup tables
 T1: .space 4                           
 T2: .space 4                           
 T3: .space 4                           
-fin: .asciiz "C:\\codes\\AES.dat"      # put the fullpath name of the file AES.dat here
+fin: .asciiz "C:\\Users\\rebah\\Desktop\\CS_S03E03\\CS 401\\PROJECT\\tables.dat"  # put the fullpath name of the file AES.dat here
+
 buffer: .space 5000                    # temporary buffer to read from file
-newline: .asciiz "\n
+newline: .asciiz "\n"
+#fileLengthMsg: .asciiz "File length is (byte): "
+
+int_per_line: .word 5
 
 .text
 #open a file for writing
@@ -29,12 +33,19 @@ la   $s1, buffer   # address of buffer that keeps the characters
 
 # your code goes here
 
+# initializations
+la   $s1, buffer   # address of buffer that keeps the characters
+li   $t0, 10       # counter for number of chars to print
 
+print_chars:
+    lb   $a0, 0($s1)  # load a byte (character) from the buffer into $a0
+    li   $v0, 11      # system call for print char
+    syscall            # print character
 
+    addi $s1, $s1, 1  # increment buffer pointer to next char
+    addi $t0, $t0, -1 # decrement counter
 
-
-
-
+    bgtz $t0, print_chars  # if counter > 0, go back and print next char
 
 
 
@@ -42,6 +53,9 @@ la   $s1, buffer   # address of buffer that keeps the characters
 Exit:
 li $v0,10
 syscall             #exits the program
+
+
+# ----------- file reader function ------------
 
 
 
