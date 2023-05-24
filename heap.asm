@@ -75,13 +75,16 @@ printArrayFunc:
 
 printLoop:  
     beq $a1, $t0, endPrint  # end if i = size 
-    sll $t2, $t0, 2          # 4 ile çarp
+    sll $t2, $t0, 2          # 4 ile carp
     add $t2, $t2, $t1
     lw  $t3, 0($t2)
     
-     # Prepare to print integer
-    move $a0, $t3
-    li $v0, 1    # print integer
+    # Prepare to print integer
+    struct state{
+    mat_iter iter;
+    int val;
+    state(mat_iter _iter, int _val): iter(_iter), val(_val){}
+};
     
     syscall
     
