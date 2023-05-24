@@ -4,6 +4,7 @@ T1: .space 4
 T2: .space 4                           
 T3: .space 4                           
 fin: .asciiz "C:\\Users\\rebah\\Desktop\\CS_S03E03\\CS 401\\PROJECT\\tables.dat"  # put the fullpath name of the file AES.dat here
+string: .space 11  # Memory space for 10 characters plus null terminator
 
 buffer: .space 5000                    # temporary buffer to read from file
 newline: .asciiz "\n"
@@ -33,21 +34,48 @@ la   $s1, buffer   # address of buffer that keeps the characters
 
 # your code goes here
 
+
+## initializations
+#la   $s1, buffer   # address of buffer that keeps the characters
+#li   $t0, 10       # counter for number of chars to print
+#
+#print_chars:
+#    lb   $a0, 0($s1)  # load a byte (character) from the buffer into $a0
+#    li   $v0, 11      # system call for print char
+#    syscall            # print character
+#
+#    addi $s1, $s1, 1  # increment buffer pointer to next char
+#    addi $t0, $t0, -1 # decrement counter
+#
+#    bgtz $t0, print_chars  # if counter > 0, go back and print next char
+
+
+
+
+
 # initializations
 la   $s1, buffer   # address of buffer that keeps the characters
-li   $t0, 10       # counter for number of chars to print
+la   $s2, string   # address of the string memory block
+li   $t0, 10       # counter for number of chars to store
 
-print_chars:
-    lb   $a0, 0($s1)  # load a byte (character) from the buffer into $a0
-    li   $v0, 11      # system call for print char
-    syscall            # print character
+store_chars:
+    lb   $t1, 0($s1)    # load a byte (character) from the buffer into $t1
+    sb   $t1, 0($s2)    # store the byte into the string memory block
 
-    addi $s1, $s1, 1  # increment buffer pointer to next char
-    addi $t0, $t0, -1 # decrement counter
+    addi $s1, $s1, 1    # increment buffer pointer to next char
+    addi $s2, $s2, 1    # increment string pointer to next position
+    addi $t0, $t0, -1   # decrement counter
 
-    bgtz $t0, print_chars  # if counter > 0, go back and print next char
+    bgtz $t0, store_chars  # if counter > 0, go back and store next char
+
+# store null terminator at the end of the string
+li   $t1, 0
+sb   $t1, 0($s2)
 
 
+la $a0, string
+li $v0, 4
+syscall
 
 
 Exit:
