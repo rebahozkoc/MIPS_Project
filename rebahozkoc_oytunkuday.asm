@@ -19,7 +19,7 @@ move $s6, $v0      # save the file descriptor
 li   $v0, 14       # system call for read from file
 move $a0, $s6      # file descriptor 
 la   $a1, buffer   # address of buffer to which to read
-li   $a2, 12288     # hardcoded buffer length
+li   $a2, 12288    # hardcoded buffer length
 syscall            # read from file
 
 move $s0, $v0	   # the number of characters read from the file
