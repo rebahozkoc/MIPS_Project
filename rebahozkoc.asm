@@ -48,6 +48,11 @@ la $a0, newline
 li $v0, 4
 syscall
 
+# CONVERT
+lw $a0, string                    #a0 = x 
+jal hexConverter  
+move $s0, $v0 
+
 li $a0, 2       # counter for number of chars to store
 jal getNCharsToString
 

@@ -4,7 +4,7 @@ T1: .space 4
 T2: .space 4
 T3: .space 4
 newline: .asciiz "\n"
-fin: .asciiz "C:\\Users\\rebah\\Desktop\\CS_S03E03\\CS 401\\PROJECT\\tables.dat"  # put the fullpath name of the file AES.dat here
+fin: .asciiz "C:\\Users\\rebah\\Desktop\\CS_S03E03\\CS 401\\PROJECT\\tables.dat" 
 buffer: .space 15000                    # temporary buffer to read from file
 
 .text
@@ -242,3 +242,5 @@ fourteenbranch:
 fifteenbranch:
     li $t4, 15
     j progress
+
+
