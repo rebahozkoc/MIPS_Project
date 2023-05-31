@@ -6,6 +6,8 @@ T3: .space 4
 newline: .asciiz "\n"
 fin: .asciiz "C:\\Users\\rebah\\Desktop\\CS_S03E03\\CS 401\\PROJECT\\tables.dat" 
 buffer: .space 15000                    # temporary buffer to read from file
+s: .word 0xd82c07cd, 0xc2094cbd, 0x6baa9441, 0x42485e3f
+rkey: .word 0x82e2e670, 0x67a9c37d, 0xc8a7063b, 0x4da5e71f
 
 .text
 #open a file for writing
@@ -41,12 +43,14 @@ sw $v0, 0($a1)
 li $a0, 1024
 li $v0, 9
 syscall
+
 la $a1, T1   # Address of T0 in $a1
 sw $v0, 0($a1)
 
 li $a0, 1024
 li $v0, 9
 syscall
+
 la $a1, T2   # Address of T0 in $a1
 sw $v0, 0($a1)
 
@@ -176,6 +180,17 @@ li $v0, 16         # system call for close file
 move $a0, $s6      # file descriptor to close
 syscall            # close the file
 
+# print new line
+la $a0, newline  
+li $v0, 4
+syscall
+
+# buraya 3.1 gelecek
+la $a0, rkey
+la $a1, s
+jal roundFunc
+
+
 li $v0,10
 syscall             #exits the program
 
@@ -242,5 +257,90 @@ fourteenbranch:
 fifteenbranch:
     li $t4, 15
     j progress
+    
+
+roundFunc:
+    addi $sp, $sp, -44
+    sw $ra, 0($sp)
+    sw $a0, 4($sp)    # address of round key r
+    sw $a1, 8($sp)    # address of state s
+    
+    sw $s0, 12($sp)   # save s registers in case of they are in use
+    sw $s1, 16($sp)
+    sw $s2, 20($sp)
+    sw $s3, 24($sp)
+    sw $s4, 28($sp)	# result t0 
+    sw $s5, 32($sp)	# result t1
+    sw $s6, 36($sp)	# result t2
+    sw $s7, 40($sp)	# result t3
+    
+    la $s0, T0   
+    lw $s0, 0($s0)    # $s0 = T0
+    la $s1, T1       
+    lw $s1, 0($s1)    # $s1 = T1
+    la $s2, T2
+    lw $s2, 0($s2)    # $S2 = T2
+    la $s3, T3
+    lw $s3, 0($s3)    # $s3 = T3
+        
+    lw $t0, 0($a0)    # rkey[0]
+    lw $t1, 4($a0)    # rkey[1]
+    lw $t2, 8($a0)    # rkey[2]
+    lw $t3, 12($a0)   # rkey[3]
+    
+    lw $t4, 0($a1)   # s[0]
+    lw $t5, 4($a1)   # s[1]
+    lw $t6, 8($a1)   # s[2]
+    lw $t7, 12($a1)  # s[3]
+    
+    
+    srl $t8, $t4, 24   		# s[0]>>24
+    sll $t8, $t8, 2
+    add $t9, $t8, $s3  		# BURADA 4 ile carpcaz mi?
+
+    lw $s4, 0($t9)	 	# t[0] = T3[s[0]>>24]
+    
+    srl $t8, $t5, 16		# s[1]>>16
+    and $t8, $t8, 0xff		# (s[1]>>16)&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s1
+    lw $t9, 0($t9)
+    xor $s4, $s4, $t9 		# t[0] = T3[s[0]>>24]^T1[(s[1]>>16)&0xff]
+    
+    srl $t8, $t6, 8		# s[2]>>8
+    and $t8, $t8, 0xff		# (s[2]>>8)&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s2	
+    lw $t9, 0($t9)
+    xor $s4, $s4, $t9		# t[0] = T3[s[0]>>24]^T1[(s[1]>>16)&0xff]^T2[(s[2]>>8)&0xff]
+    
+    and $t8, $t7, 0xff		# s[3]&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s0
+
+    lw $t9, 0($t9)
+    xor $s4, $s4, $t9 		# t[0] = T3[s[0]>>24]^T1[(s[1]>>16)&0xff]^T2[(s[2]>>8)&0xff]^T0[s[3]&0xff]
+    
+    xor $s4, $s4, $t0
+    
+    move $a0, $s4
+    li $v0, 34         # print integer as hex
+    syscall
+
+endRoundFunc:
+    lw $ra, 0($sp)
+    lw $a0, 4($sp)
+    lw $a1, 8($sp)
+
+    lw $s0, 12($sp)
+    lw $s1, 16($sp)
+    lw $s2, 20($sp)
+    lw $s3, 24($sp)
+    lw $s4, 28($sp)
+    lw $s5, 32($sp)
+    lw $s6, 36($sp)
+    lw $s7, 40($sp)
+    addi $sp, $sp, 44
+    jr $ra
 
 
