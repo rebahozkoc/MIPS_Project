@@ -293,10 +293,11 @@ roundFunc:
     lw $t6, 8($a1)   # s[2]
     lw $t7, 12($a1)  # s[3]
     
+    #------------t[0]-----------------------
     
     srl $t8, $t4, 24   		# s[0]>>24
     sll $t8, $t8, 2
-    add $t9, $t8, $s3  		# BURADA 4 ile carpcaz mi?
+    add $t9, $t8, $s3  
 
     lw $s4, 0($t9)	 	# t[0] = T3[s[0]>>24]
     
@@ -321,11 +322,136 @@ roundFunc:
     lw $t9, 0($t9)
     xor $s4, $s4, $t9 		# t[0] = T3[s[0]>>24]^T1[(s[1]>>16)&0xff]^T2[(s[2]>>8)&0xff]^T0[s[3]&0xff]
     
-    xor $s4, $s4, $t0
+    xor $s4, $s4, $t0		# t[0] = t[0]^rkey[0]	
     
     move $a0, $s4
     li $v0, 34         # print integer as hex
     syscall
+    
+    # print new line
+    la $a0, newline  
+    li $v0, 4
+    syscall
+    
+    
+    #------- t[0] is done -------------- 
+    #---------- t[1]--------------------
+    srl $t8, $t5, 24   		# s[1]>>24
+    sll $t8, $t8, 2
+    add $t9, $t8, $s3  	
+
+    lw $s5, 0($t9)	 	# t[1] = T3[s[1]>>24]
+    
+    srl $t8, $t6, 16		# s[2]>>16
+    and $t8, $t8, 0xff		# (s[2]>>16)&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s1
+    lw $t9, 0($t9)
+    xor $s5, $s5, $t9 		# t[1] = T3[s[1]>>24]^T1[(s[2]>>16)&0xff]
+    
+    srl $t8, $t7, 8		# s[3]>>8
+    and $t8, $t8, 0xff		# (s[3]>>8)&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s2	
+    lw $t9, 0($t9)
+    xor $s5, $s5, $t9		# t[1] = T3[s[1]>>24]^T1[(s[2]>>16)&0xff]^T2[(s[3]>>8)&0xff]
+    
+    and $t8, $t4, 0xff		# s[0]&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s0
+
+    lw $t9, 0($t9)
+    xor $s5, $s5, $t9 		# t[1] = T3[s[1]>>24]^T1[(s[2]>>16)&0xff]^T2[(s[3]>>8)&0xff]^T0[s[0]&0xff]
+    
+    xor $s5, $s5, $t1		# t[1] = t[1]^rkey[1]		
+    
+    move $a0, $s5
+    li $v0, 34         # print integer as hex
+    syscall
+    
+    # print new line
+    la $a0, newline  
+    li $v0, 4
+    syscall
+    
+    #---------------t[1] is done------------------------
+     #---------- t[2]-----------------------------------
+    srl $t8, $t6, 24   		# s[2]>>24
+    sll $t8, $t8, 2
+    add $t9, $t8, $s3  	
+
+    lw $s6, 0($t9)	 	# t[2] = T3[s[2]>>24]
+    
+    srl $t8, $t7, 16		# s[3]>>16
+    and $t8, $t8, 0xff		# (s[3]>>16)&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s1
+    lw $t9, 0($t9)
+    xor $s6, $s6, $t9 		# t[2] = T3[s[2]>>24]^T1[(s[3]>>16)&0xff]
+    
+    srl $t8, $t4, 8		# s[0]>>8
+    and $t8, $t8, 0xff		# (s[0]>>8)&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s2	
+    lw $t9, 0($t9)
+    xor $s6, $s6, $t9		# t[2] = T3[s[2]>>24]^T1[(s[3]>>16)&0xff]^T2[(s[0]>>8)&0xff]
+    
+    and $t8, $t5, 0xff		# s[1]&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s0
+
+    lw $t9, 0($t9)
+    xor $s6, $s6, $t9 		# t[2] = T3[s[2]>>24]^T1[(s[3]>>16)&0xff]^T2[(s[0]>>8)&0xff]^T0[s[1]&0xff]
+    
+    xor $s6, $s6, $t2		# t[2] = t[2]^rkey[2]		
+    
+    move $a0, $s6
+    li $v0, 34         # print integer as hex
+    syscall
+
+    # print new line
+    la $a0, newline  
+    li $v0, 4
+    syscall    
+    #---------------t[2] is done------------------------
+    #---------- t[3]-----------------------------------
+    srl $t8, $t7, 24   		# s[3]>>24
+    sll $t8, $t8, 2
+    add $t9, $t8, $s3  	
+
+    lw $s7, 0($t9)	 	# t[3] = T3[s[3]>>24]
+    
+    srl $t8, $t4, 16		# s[0]>>16
+    and $t8, $t8, 0xff		# (s[0]>>16)&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s1
+    lw $t9, 0($t9)
+    xor $s7, $s7, $t9 		# t[3] = T3[s[3]>>24]^T1[(s[0]>>16)&0xff]
+    
+    srl $t8, $t5, 8		# s[1]>>8
+    and $t8, $t8, 0xff		# (s[1]>>8)&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s2	
+    lw $t9, 0($t9)
+    xor $s7, $s7, $t9		# t[3] = T3[s[3]>>24]^T1[(s[0]>>16)&0xff]^T2[(s[1]>>8)&0xff]
+    
+    and $t8, $t6, 0xff		# s[2]&0xff
+    sll $t8, $t8, 2
+    add $t9, $t8, $s0
+
+    lw $t9, 0($t9)
+    xor $s7, $s7, $t9 		# t[3] = T3[s[3]>>24]^T1[(s[0]>>16)&0xff]^T2[(s[1]>>8)&0xff]^T0[s[2]&0xff]
+    
+    xor $s7, $s7, $t3		# t[3] = t[3]^rkey[3]		
+    
+    move $a0, $s7
+    li $v0, 34         # print integer as hex
+    syscall
+    
+    #---------------t[3] is done------------------------       
+    
+    
+    
 
 endRoundFunc:
     lw $ra, 0($sp)
