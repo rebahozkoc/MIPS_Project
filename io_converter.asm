@@ -1,32 +1,35 @@
 .data
 bufferIO: .space 1024
 msg: .asciiz "Enter string: "
-
-
+newline: .asciiz "\n"
 .text
 
+li $v0, 4               # system call for print string
+la $a0, msg             # load address of string to print
+syscall                 # print enter string message
 
-#4.2 
-li $v0, 4             # system call for print string
-la $a0, msg           # load address of string to print
-syscall               # print enter string message
-
-li $v0, 8             # system call for reading string
+li $v0, 8               # system call for reading string
 la $a0, bufferIO        # load address of buffer
-li $a1, 1024          # maximum characters to read
-syscall               # read string
+li $a1, 1024            # maximum characters to read
+syscall                 # read string
 
 la $a0, bufferIO        # load address of string
-jal print_chars         # convert and print as hexadecimal
+jal stringCount
+
+la $a0, bufferIO
+move $a1, $v0
+jal parse_all
+
 
 
 li $v0,10
 syscall             #exits the program
 
 stringCount:
-    addi $sp, $sp, -8
+    addi $sp, $sp, -12
     sw $s0, 0($sp)
     sw $s1, 4($sp)
+    sw $a0, 8($sp)
     li $s1, 0
     move  $s0, $a0
     
@@ -38,25 +41,23 @@ stringCountLoop:
     addi $s1, $s1, 1
     j stringCountLoop
 
+
 stringCountLoopOut:
-    li $v0, 1
-    add $a0, $0, $s1
-    syscall
-    li $v0, 10
-    syscall
     move $v0, $s1
     lw $s0, 0($sp)
     lw $s1, 4($sp)
-    addi $sp, $sp, 8
+    lw $a0, 8($sp)
+    addi $sp, $sp, 12
     jr $ra
 
 
 print_chars:
-    addi $sp, $sp, -16
+    addi $sp, $sp, -20
     sw $s0, 0($sp)
     sw $s1, 4($sp)
     sw $s2, 8($sp)
     sw $s3, 12($sp)
+    sw $ra, 16($sp)
     move $t0, $a0
     li $t2, 4
     li $v0, 0
@@ -130,5 +131,31 @@ ph_return:
     lw $s1, 4($sp)
     lw $s2, 8($sp)
     lw $s3, 12($sp)
-    addi $sp, $sp, 16
+    lw $ra, 16($sp)
+    addi $sp, $sp, 20
+    move $v0, $t0
     jr $ra               # return
+    
+parse_all:
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+    addi $a1, $a1, 14    # a1 contains size
+    div $a1, $a1, 16
+    
+parse_all_loop:
+    beqz $a1, end_parse_all
+    jal print_chars         # convert and print as hexadecimal
+    
+    move $t1, $v0
+    la $a0, newline         # print new line
+    li $v0, 4
+    syscall
+    move $a0, $t1
+    subi $a1, $a1, 1
+    j parse_all_loop
+
+end_parse_all:
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
