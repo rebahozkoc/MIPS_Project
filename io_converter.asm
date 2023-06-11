@@ -52,16 +52,83 @@ stringCountLoopOut:
 
 
 print_chars:
-  move $t0, $a0
-
+    addi $sp, $sp, -16
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $s2, 8($sp)
+    sw $s3, 12($sp)
+    move $t0, $a0
+    li $t2, 4
+    li $v0, 0
+    li $s0, 0
+    li $s1, 0
+    li $s2, 0
+    li $s3, 0
+        
 print_loop:
-  lb $t1, 0($t0)       # load byte from string
-  beqz $t1, ph_return  # if byte is zero, return
-  li $v0, 34           # system call for print char
-  move $a0, $t1
-  syscall
-  addiu $t0, $t0, 1    # increment the address
-  j print_loop         # repeat
+    beqz $t2, end_print_loop  
+    lb $t1, 0($t0)       # load byte from string   
+    sll $s0, $s0, 8
+    add $s0, $s0, $t1
+    addiu $t0, $t0, 1    # increment the address
+    subi $t2, $t2, 1
+    j print_loop         # repeat
 
+end_print_loop:
+    li $v0, 34           
+    move $a0, $s0
+    syscall
+    li $t2, 4
+    
+print_loop2:
+    beqz $t2, end_print_loop2  
+    lb $t1, 0($t0)       # load byte from string   
+    sll $s0, $s0, 8
+    add $s0, $s0, $t1
+    addiu $t0, $t0, 1    # increment the address
+    subi $t2, $t2, 1
+    j print_loop2         # repeat
+
+end_print_loop2:
+    li $v0, 34           
+    move $a0, $s0
+    syscall
+    li $t2, 4    
+
+print_loop3:
+    beqz $t2, end_print_loop3  
+    lb $t1, 0($t0)       # load byte from string   
+    sll $s0, $s0, 8
+    add $s0, $s0, $t1
+    addiu $t0, $t0, 1    # increment the address
+    subi $t2, $t2, 1
+    j print_loop3         # repeat
+
+end_print_loop3:
+    li $v0, 34           
+    move $a0, $s0
+    syscall
+    li $t2, 4    
+    
+print_loop4:
+    beqz $t2, end_print_loop4 
+    lb $t1, 0($t0)       # load byte from string   
+    sll $s0, $s0, 8
+    add $s0, $s0, $t1
+    addiu $t0, $t0, 1    # increment the address
+    subi $t2, $t2, 1
+    j print_loop4         # repeat
+
+end_print_loop4:
+    li $v0, 34           
+    move $a0, $s0
+    syscall
+    li $t2, 4    
+    
 ph_return:
-  jr $ra               # return
+    lw $s0, 0($sp)
+    lw $s1, 4($sp)
+    lw $s2, 8($sp)
+    lw $s3, 12($sp)
+    addi $sp, $sp, 16
+    jr $ra               # return
