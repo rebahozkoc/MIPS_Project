@@ -4,16 +4,17 @@ T1: .space 4
 T2: .space 4
 T3: .space 4
 newline: .asciiz "\n"
+roundmsg: .asciiz "new states:\n"
 msg: .asciiz "Enter string: "
-bufferIO: .space 1024
-
-fin: .asciiz "C:\\Users\\rebah\\Desktop\\CS_S03E03\\CS 401\\PROJECT\\tables.dat" 
+debugmsg: .asciiz "reached here:\n"
+fin: .asciiz "C:\\Users\\rebah\\Desktop\\CS_S03E03\\CS 401\\PROJECT\\tables.dat"
 buffer: .space 15000                    # temporary buffer to read from file
 s: .word 0xd82c07cd, 0xc2094cbd, 0x6baa9441, 0x42485e3f
 rkey: .word 0x82e2e670, 0x67a9c37d, 0xc8a7063b, 0x4da5e71f
-key: .word 0x6920e299, 0xa5202a6d, 0x656e6368, 0x69746f2a
+key: .word 0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c
 rcon : .word 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01
-
+converted_msg : .word 0x00000000, 0x00000000, 0x00000000, 0x00000000
+bufferIO: .space 1024
 
 .text
 #open a file for writing
@@ -192,16 +193,88 @@ li $v0, 4
 syscall
 
 
+li $v0, 4               # system call for print string
+la $a0, msg             # load address of string to print
+syscall                 # print enter string message
+
+li $v0, 8               # system call for reading string
+la $a0, bufferIO        # load address of buffer
+li $a1, 1024            # maximum characters to read
+syscall                 # read string
+
+la $a0, bufferIO        # load address of string
+jal stringCount
+
+la $a0, bufferIO
+move $a1, $v0
+jal parse_all
+
+
+
+
+process: #128 bitte 1 buraya branchlencek
+
+#KEY WHITENING:
+
+la $s0, key
+lw $t0, 0($s0)    # key[0]
+lw $t1, 4($s0)    # key[1]
+lw $t2, 8($s0)    # key[2]
+lw $t3, 12($s0)   # key[3]
+
+la $s0, converted_msg
+lw $t4, 0($s0)    # key[0]
+lw $t5, 4($s0)    # key[1]
+lw $t6, 8($s0)    # key[2]
+lw $t7, 12($s0)   # key[3]
+
+xor $t0, $t0,$t4
+xor $t1, $t1,$t5
+xor $t2, $t2,$t6
+xor $t3, $t3,$t7
+xor $t4, $t4,$t8
+
+
+move $a0, $t0
+li $v0, 34         # print integer as hex
+syscall
+li $a0, 32
+li $v0, 11  
+syscall
+move $a0, $t1
+li $v0, 34         # print integer as hex
+syscall
+li $a0, 32
+li $v0, 11  
+syscall
+move $a0, $t2
+li $v0, 34         # print integer as hex
+syscall
+li $a0, 32
+li $v0, 11  
+syscall
+move $a0, $t3
+li $v0, 34         # print integer as hex
+syscall
+
+sw $t0, 0($s0)    # s[0]
+sw $t1, 4($s0)    # s[1]
+sw $t2, 8($s0)    # s[2]
+sw $t3, 12($s0)   # s[3]
+
+la $a0, newline  
+li $v0, 4
+syscall
 
 
 # buraya 3.1 gelecek
-la $a0, rkey
-la $a1, s
-jal roundFunc
 
-li $a0, 10          # newline print
-li $v0, 11          
-syscall 
+
+
+
+
+
+
 
 
 #3.2
@@ -218,12 +291,13 @@ sw $t1, 4($s0)    # key[1]
 sw $t2, 8($s0)    # key[2]
 sw $t3, 12($s0)   # key[3]
 
-li $t9, 0
+li $s4, 0
 la $s6, rcon
 
 li $a0, 10          # newline print
 li $v0, 11          
 syscall       
+
 
 round:
 
@@ -294,7 +368,7 @@ lw $t3, 12($s0)
 xor $t3, $t2, $t3
 sw $t3, 12($s0)
 
-addi, $t9,$t9,1
+addi, $s4,$s4,1
 addi $s6,$s6,4
 
 move $a0, $t0
@@ -329,29 +403,47 @@ syscall
 li $a0, 10          # newline print
 li $v0, 11          
 syscall 
-bne $t9, 8, round
+
+la $a0, newline  
+li $v0, 4
+syscall
+
+
+la $a0, roundmsg  
+li $v0, 4
+syscall
+
+
+la $a0, rkey
+la $a1, converted_msg
+jal roundFunc
+
+
+
+
+li $a0, 10          # newline print
+li $v0, 11          
+syscall 
+
+
+
+bne $s4, 8, round
+
+
+#burada check edip tekrar inputa devam etmeye başlayacak, orada check olmalı input yoksa exitlicek
 
 
 
 
 
-
-#4.2 
-li $v0, 4             # system call for print string
-la $a0, msg           # load address of string to print
-syscall               # print enter string message
-
-li $v0, 8             # system call for reading string
-la $a0, bufferIO        # load address of buffer
-li $a1, 1024          # maximum characters to read
-syscall               # read string
-
-la $a0, bufferIO        # load address of string
-jal print_hex         # convert and print as hexadecimal
 
 
 li $v0,10
 syscall             #exits the program
+
+
+
+
 
 
 zerobranch:
@@ -424,6 +516,7 @@ roundFunc:
     sw $ra, 0($sp)
     sw $a0, 4($sp)    # address of round key r
     sw $a1, 8($sp)    # address of state s
+    
     sw $s0, 12($sp)   # save s registers in case of they are in use
     sw $s1, 16($sp)
     sw $s2, 20($sp)
@@ -446,7 +539,6 @@ roundFunc:
     lw $t1, 4($a0)    # rkey[1]
     lw $t2, 8($a0)    # rkey[2]
     lw $t3, 12($a0)   # rkey[3]
-    
     lw $t4, 0($a1)   # s[0]
     lw $t5, 4($a1)   # s[1]
     lw $t6, 8($a1)   # s[2]
@@ -491,6 +583,7 @@ roundFunc:
     la $a0, newline  
     li $v0, 4
     syscall
+    
     
     #------- t[0] is done -------------- 
     #---------- t[1]--------------------
@@ -606,13 +699,21 @@ roundFunc:
     li $v0, 34         # print integer as hex
     syscall
     
-    #---------------t[3] is done------------------------       
+    move $t0, $s4
+    sw $t0, 0($a1)
     
-endRoundFunc:
+    move $t0, $s5
+    sw $t0, 4($a1)
+    
+    move $t0, $s6
+    sw $t0, 8($a1)
+    
+    move $t0, $s7
+    sw $t0, 12($a1)
+    #---------------t[3] is done------------------------       
     lw $ra, 0($sp)
     lw $a0, 4($sp)
     lw $a1, 8($sp)
-
     lw $s0, 12($sp)
     lw $s1, 16($sp)
     lw $s2, 20($sp)
@@ -627,9 +728,10 @@ endRoundFunc:
 
 
 stringCount:
-    addi $sp, $sp, -8
+    addi $sp, $sp, -12
     sw $s0, 0($sp)
     sw $s1, 4($sp)
+    sw $a0, 8($sp)
     li $s1, 0
     move  $s0, $a0
     
@@ -641,30 +743,137 @@ stringCountLoop:
     addi $s1, $s1, 1
     j stringCountLoop
 
+
 stringCountLoopOut:
-    li $v0, 1
-    add $a0, $0, $s1
-    syscall
-    li $v0, 10
-    syscall
     move $v0, $s1
     lw $s0, 0($sp)
     lw $s1, 4($sp)
-    addi $sp, $sp, 8
+    lw $a0, 8($sp)
+    addi $sp, $sp, 12
     jr $ra
 
 
 print_chars:
-    move $t0, $a0
-
+    # a0'da input buffer var
+    #a1'de output word var
+    addi $sp, $sp, -20
+    sw $s0, 0($sp)
+    sw $s1, 4($sp)
+    sw $s2, 8($sp)
+    sw $s3, 12($sp)
+    sw $ra, 16($sp)
+    move $t0, $a0    
+    li $t2, 4
+    li $v0, 0
+    li $s0, 0
+    li $s1, 0
+    li $s2, 0
+    li $s3, 0
+    
 print_loop:
-    lb $t1, 0($t0)       	 # load byte from string
-    beqz $t1, ph_return   # if byte is zero, return
-    li $v0, 11             	 # system call for print char
-    move $a0, $t1
-    syscall
-    sll $t0 , $t0 , 8
-    j print_loop           # repeat
+    beqz $t2, end_print_loop  
+    lb $t1, 0($t0)       # load byte from string   
+    addiu $t0, $t0, 1    # increment the address
+    subi $t2, $t2, 1
+    sll $s0, $s0, 8
+    xor $t4, $t1, 10
+    beqz $t4, print_loop
+    add $s0, $s0, $t1
+    j print_loop         # repeat
 
+end_print_loop:
+    sw $s0, 0($a1)
+    li $v0, 34           
+    move $a0, $s0
+    syscall
+    li $t2, 4
+    
+print_loop2:
+    beqz $t2, end_print_loop2  
+    lb $t1, 0($t0)       # load byte from string   
+    addiu $t0, $t0, 1    # increment the address
+    subi $t2, $t2, 1
+    sll $s0, $s0, 8
+    xor $t4, $t1, 10
+    beqz $t4, print_loop2
+    add $s0, $s0, $t1
+    j print_loop2         # repeat
+
+end_print_loop2:
+    sw $s0, 4($a1)
+    li $v0, 34           
+    move $a0, $s0
+    syscall
+    li $t2, 4    
+
+print_loop3:
+    beqz $t2, end_print_loop3  
+    lb $t1, 0($t0)       # load byte from string   
+    addiu $t0, $t0, 1    # increment the address
+    subi $t2, $t2, 1
+    sll $s0, $s0, 8
+    xor $t4, $t1, 10
+    beqz $t4, print_loop3
+    add $s0, $s0, $t1
+    j print_loop3         # repeat
+
+end_print_loop3:
+    sw $s0, 8($a1)
+    li $v0, 34           
+    move $a0, $s0
+    syscall
+    li $t2, 4    
+    
+print_loop4:
+    beqz $t2, end_print_loop4 
+    lb $t1, 0($t0)       # load byte from string   
+    addiu $t0, $t0, 1    # increment the address
+    subi $t2, $t2, 1
+    sll $s0, $s0, 8
+    xor $t4, $t1, 10
+    beqz $t4, print_loop4
+    add $s0, $s0, $t1
+    j print_loop4         # repeat
+
+end_print_loop4:
+    sw $s0, 12($a1)
+
+    li $v0, 34           
+    move $a0, $s0
+    syscall
+    li $t2, 4    
+    
 ph_return:
-    jr $ra                # return
+    lw $s0, 0($sp)
+    lw $s1, 4($sp)
+    lw $s2, 8($sp)
+    lw $s3, 12($sp)
+    lw $ra, 16($sp)
+    addi $sp, $sp, 20
+    move $v0, $t0
+    jr $ra               # return
+    
+parse_all:
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+    move $t3, $a1        # a1 contains size
+    addi $t3, $t3, 14   
+    div $t3, $t3, 16
+    
+parse_all_loop:
+    beqz $t3, end_parse_all
+    la $a1, converted_msg
+    jal print_chars         # convert and print as hexadecimal
+    
+    move $t1, $v0
+    la $a0, newline         # print new line
+    li $v0, 4
+    syscall
+    move $a0, $t1
+    subi $t3, $t3, 1
+    j parse_all_loop
+
+end_parse_all:
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
