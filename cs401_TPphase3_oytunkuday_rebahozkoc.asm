@@ -209,8 +209,30 @@ la $a0, bufferIO
 move $a1, $v0
 jal parse_all
 
+la $a0, bufferIO        # load address of string
+jal stringCount
 
+move $a3, $v0        # a3 contains size
+addi $a3, $a3, 15   
+div $a3, $a3, 16
+    
+cript_all_loop:
+    beqz $a3, end_cript_all
+    la $a1, converted_msg
+    jal print_chars         # convert and print as hexadecimal
+       
+    addi $sp, $sp, -4
+    sw $v0, 0($sp)
+    j process
+cript_all_loop_cont:
+    lw $a0, 0($sp)
+    addi $sp, $sp, 4
+    subi $a3, $a3, 1
+    j cript_all_loop
 
+end_cript_all:
+    li $v0,10
+    syscall             #exits the program
 
 process: #128 bitte 1 buraya branchlencek
 
@@ -268,15 +290,6 @@ syscall
 
 
 # buraya 3.1 gelecek
-
-
-
-
-
-
-
-
-
 #3.2
 la $s0, key
 lw $t0, 0($s0)    # key[0]
@@ -432,14 +445,7 @@ bne $s4, 8, round
 
 #burada check edip tekrar inputa devam etmeye başlayacak, orada check olmalı input yoksa exitlicek
 
-
-
-
-
-
-
-li $v0,10
-syscall             #exits the program
+j cript_all_loop_cont
 
 
 
@@ -877,3 +883,6 @@ end_parse_all:
     lw $ra, 0($sp)
     addi $sp, $sp, 4
     jr $ra
+    
+ 
+ 
